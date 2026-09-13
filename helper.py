@@ -9,22 +9,22 @@ import shutil
 from ctypes import wintypes
 
  ### НАСТРОЙКИ ОБНОВЛЕНИЯ ###
-UPDATE_URL = "https://raw.githubusercontent.com/Purplix-co/Bot.git/main/version.txt"
-UPDATE_FILE_URL = "https://raw.githubusercontent.com/Purplix-co/Bot.git/main/helper.py"
+UPDATE_URL = "https://raw.githubusercontent.com/Purplix-co/Bot/refs/heads/main/data/assistant_data.json"
+UPDATE_FILE_URL = "https://raw.githubusercontent.com/Purplix-co/Bot/refs/heads/main/helper.py"
 
 # === ОБНОВЛЕНИЕ JSON ===
 def ensure_version_in_data():
     """Проверяет, есть ли поле version в JSON. Если нет — добавляет."""
     data = load_data()
     if "version" not in data:
-        data["version"] = "1.0.0"
+        data["version"] = "1.0.0.1"
         save_data(data)
     return data
 
 def get_current_version():
     """Читает текущую версию из JSON"""
     data = load_data()
-    return data.get("version", "1.0.0")
+    return data.get("version", "1.0.0.1")
 
 def set_version(new_version):
     """Записывает версию в JSON"""
@@ -33,39 +33,42 @@ def set_version(new_version):
     save_data(data)
 
 def get_latest_version():
-    """Скачивает последнюю версию с сервера"""
+    """Скачивает последнюю версию с сервера (из version.json)"""
     try:
-        with urllib.request.urlopen(UPDATE_URL, timeout=5) as response:
-            return response.read().decode("utf-8").strip()
+        with urllib.request.urlopen(UPDATE_JSON_URL, timeout=5) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return data.get("version", None)
     except:
         return None
 
 def check_for_updates():
     """Проверяет обновления и предлагает обновиться"""
-    print("🔍 Проверяю обновления...")
+    t = get_text
+    print(t("checking_updates"))
     
     current = get_current_version()
     latest = get_latest_version()
     
     if latest is None:
-        print("⚠️ Не удалось проверить обновления (нет интернета?)")
+        print(t("no_internet"))
         return
     
     if current == latest:
-        print(f"✅ У тебя последняя версия: {current}")
+        print(t("latest_version").format(current))
         return
     
-    print(f"📢 Доступна новая версия: {latest} (у тебя {current})")
-    choice = input("❓ Обновить? (y/n): ").strip().lower()
+    print(t("new_version_available").format(latest, current))
+    choice = input(t("update_question")).strip().lower()
     
     if choice == "y":
         download_update(latest)
     else:
-        print("👌 Продолжаем без обновления")
+        print(t("update_no"))
 
 def download_update(new_version):
     """Скачивает новую версию и заменяет файлы"""
-    print("📥 Скачиваю обновление...")
+    t = get_text
+    print(t("update_yes"))
     
     try:
         # Скачиваем новый helper.py
@@ -84,14 +87,14 @@ def download_update(new_version):
         old_file = os.path.join(SCRIPT_DIR, "helper.py")
         shutil.move(temp_file, old_file)
         
-        print(f"✅ Обновление установлено! Версия: {new_version}")
-        print("🔄 Перезапусти бота, чтобы применить изменения.")
-        input("📌 Нажми Enter для выхода...")
+        print(t("update_success").format(new_version))
+        print(t("update_restart"))
+        input(t("update_press_enter"))
         exit()
         
     except Exception as e:
-        print(f"❌ Ошибка обновления: {e}")
-        input("📌 Нажми Enter для продолжения...")
+        print(t("update_error").format(e))
+        input(t("update_press_enter_continue"))
 
 # === НАСТРОЙКИ ===
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -134,11 +137,11 @@ def load_data():
                 data = json.load(f)
                 # Если нет поля version — добавляем
                 if "version" not in data:
-                    data["version"] = "1.0.0"
+                    data["version"] = "1.0.0.1"
                 return data
         except:
-            return {"version": "1.0.0", "language": "en", "programs": {}}
-    return {"version": "1.0.0", "language": "en", "programs": {}}
+            return {"version": "1.0.0.1", "language": "en", "programs": {}}
+    return {"version": "1.0.0.1", "language": "en", "programs": {}}
 
 def save_data(data):
     try:
@@ -254,7 +257,19 @@ translations = {
         "find_found": "✅ Found: {}",
         "find_not_found": "❌ Not found: {}",
         "find_in_memory": "📂 Found in memory: {}",
-        "find_specify_name": "❌ Specify program name, e.g. find Roblox"
+        "find_specify_name": "❌ Specify program name, e.g. find Roblox",
+        "checking_updates": "🔍 Checking for updates...",
+        "no_internet": "⚠️ Could not check for updates (no internet?)",
+        "latest_version": "✅ You have the latest version: {}",
+        "new_version_available": "📢 New version available: {} (you have {})",
+        "update_question": "❓ Update? (y/n): ",
+        "update_yes": "📥 Downloading update...",
+        "update_no": "👌 Continuing without update",
+        "update_success": "✅ Update installed! Version: {}",
+        "update_restart": "🔄 Restart the bot to apply changes.",
+        "update_press_enter": "📌 Press Enter to exit...",
+        "update_error": "❌ Update error: {}",
+        "update_press_enter_continue": "📌 Press Enter to continue...",
     },
     "ru": {
         "help_title": "🤖 ПОМОЩНИК (введи команду)",
@@ -356,7 +371,19 @@ translations = {
         "find_found": "✅ Найдено: {}",
         "find_not_found": "❌ Не найдено: {}",
         "find_in_memory": "📂 Найдено в памяти: {}",
-        "find_specify_name": "❌ Укажи имя программы, например: find Roblox"
+        "find_specify_name": "❌ Укажи имя программы, например: find Roblox",
+        "checking_updates": "🔍 Проверяю обновления...",
+        "no_internet": "⚠️ Не удалось проверить обновления (нет интернета?)",
+        "latest_version": "✅ У тебя последняя версия: {}",
+        "new_version_available": "📢 Доступна новая версия: {} (у тебя {})",
+        "update_question": "❓ Обновить? (y/n): ",
+        "update_yes": "📥 Скачиваю обновление...",
+        "update_no": "👌 Продолжаем без обновления",
+        "update_success": "✅ Обновление установлено! Версия: {}",
+        "update_restart": "🔄 Перезапусти бота, чтобы применить изменения.",
+        "update_press_enter": "📌 Нажми Enter для выхода...",
+        "update_error": "❌ Ошибка обновления: {}",
+        "update_press_enter_continue": "📌 Нажми Enter для продолжения...",
     },
     "pl": {
         "help_title": "🤖 ASYSTENT (wprowadź komendę)",
@@ -458,7 +485,19 @@ translations = {
         "find_found": "✅ Znaleziono: {}",
         "find_not_found": "❌ Nie znaleziono: {}",
         "find_in_memory": "📂 Znaleziono w pamięci: {}",
-        "find_specify_name": "❌ Podaj nazwę programu, np. find Roblox"
+        "find_specify_name": "❌ Podaj nazwę programu, np. find Roblox",
+        "checking_updates": "🔍 Sprawdzam aktualizacje...",
+        "no_internet": "⚠️ Nie udało się sprawdzić aktualizacji (brak internetu?)",
+        "latest_version": "✅ Masz najnowszą wersję: {}",
+        "new_version_available": "📢 Dostępna nowa wersja: {} (masz {})",
+        "update_question": "❓ Zaktualizować? (y/n): ",
+        "update_yes": "📥 Pobieram aktualizację...",
+        "update_no": "👌 Kontynuuję bez aktualizacji",
+        "update_success": "✅ Aktualizacja zainstalowana! Wersja: {}",
+        "update_restart": "🔄 Uruchom bota ponownie, aby zastosować zmiany.",
+        "update_press_enter": "📌 Naciśnij Enter, aby wyjść...",
+        "update_error": "❌ Błąd aktualizacji: {}",
+        "update_press_enter_continue": "📌 Naciśnij Enter, aby kontynuować...",
     }
 }
 
