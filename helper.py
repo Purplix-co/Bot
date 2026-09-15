@@ -17,14 +17,14 @@ def ensure_version_in_data():
     """Проверяет, есть ли поле version в JSON. Если нет — добавляет."""
     data = load_data()
     if "version" not in data:
-        data["version"] = "1.0.0.2"
+        data["version"] = "1.0.0.3"
         save_data(data)
     return data
 
 def get_current_version():
     """Читает текущую версию из JSON"""
     data = load_data()
-    return data.get("version", "1.0.0.2")
+    return data.get("version", "1.0.0.3")
 
 def set_version(new_version):
     """Записывает версию в JSON"""
@@ -141,11 +141,11 @@ def load_data():
                 data = json.load(f)
                 # Если нет поля version — добавляем
                 if "version" not in data:
-                    data["version"] = "1.0.0.2"
+                    data["version"] = "1.0.0.3"
                 return data
         except:
-            return {"version": "1.0.0.2", "language": "en", "programs": {}}
-    return {"version": "1.0.0.2", "language": "en", "programs": {}}
+            return {"version": "1.0.0.3", "language": "en", "programs": {}}
+    return {"version": "1.0.0.3", "language": "en", "programs": {}}
 
 def save_data(data):
     try:
