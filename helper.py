@@ -35,11 +35,15 @@ def set_version(new_version):
 def get_latest_version():
     """Скачивает последнюю версию с сервера (из version.json)"""
     try:
-        with urllib.request.urlopen(UPDATE_JSON_URL, timeout=5) as response:
+        # ИСПРАВЛЕНО: Заменили UPDATE_JSON_URL на UPDATE_URL
+        with urllib.request.urlopen(UPDATE_URL, timeout=5) as response:
             data = json.loads(response.read().decode("utf-8"))
             return data.get("version", None)
-    except:
+    except Exception as e:
+        # Для отладки можно временно раскомментировать строку ниже, чтобы видеть реальную ошибку:
+        # print(f"Debug error: {e}")
         return None
+
 
 def check_for_updates():
     """Проверяет обновления и предлагает обновиться"""
